@@ -3,3 +3,31 @@ weights
 input
 data
 output
+
+.env
+venv
+__pycache__
+__init__.py
+__init__.pyc
+
+.gitignore
+outputs/
+uploads/
+runs
+
+# Models
+*.pt
+*.onnx
+*.weights
+*.h5
+*.engine
+
+# Media
+*.mp4
+*.png
+*.jpg
+*.jpeg
+*.avi
+
+# Logs
+logs/
