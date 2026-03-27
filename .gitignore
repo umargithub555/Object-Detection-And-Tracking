@@ -30,4 +30,5 @@ runs
 *.avi
 
 # Logs
-logs/
+logs/
+*.ipynb
