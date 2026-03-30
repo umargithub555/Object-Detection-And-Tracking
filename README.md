@@ -3,7 +3,7 @@
 
 
 
-🚀 My latest project on Detection, Tracking, and Counting with YOLOv9 and Supervision! 🎥🔍
+🚀 My latest project on Detection, Tracking, and Counting with YOLO and Supervision! 🎥🔍
 
 🌟 Features:
 

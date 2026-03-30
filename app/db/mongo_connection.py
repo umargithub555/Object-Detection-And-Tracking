@@ -8,6 +8,7 @@ import os
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.user import User
+from app.models.settings import SystemSettings
 
 
 
@@ -27,7 +28,8 @@ async def init_db():
     await init_beanie(
         database=DB_CLIENT.database,
         document_models=[
-            User
+            User,
+            SystemSettings
         ]
     )
     logger.info("✅ Beanie initialized with User model")

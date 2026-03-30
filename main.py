@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from app.auth import auth_router
 from app.detect import video_router
+from app.routes import settings_router
 from app.core.logging import setup_logging, get_logger
 from app.db.mongo_connection import mongo_lifespan
 from app.models.user import User
@@ -61,3 +62,4 @@ async def create_admin(admin_data: AdminSeedRequest):
 
 app.include_router(auth_router.router)
 app.include_router(video_router.router)
+app.include_router(settings_router.router)
