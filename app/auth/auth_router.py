@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
@@ -21,7 +23,7 @@ class VerifyOTPRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
-    otp: str
+    otp: Optional[str] = None
     new_password: str
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -61,8 +63,10 @@ async def forgot_password(request: ForgotPasswordRequest, background_tasks: Back
             # Prevent email enumeration by returning success even if user not found
             return {"message": "If this email is registered, an OTP will be sent."}
         
-        # Generate 6 digit OTP
+        # Generate 4 digit OTP
         otp = generate_otp()
+
+        print("OTP :", otp)
         
         # Set expiration to 10 minutes from now
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
@@ -112,23 +116,23 @@ async def reset_password(request: ResetPasswordRequest):
         if not user:
              raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
-        if user.otp_code != request.otp:
-             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP")
+        # if user.otp_code != request.otp:
+        #      raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP")
              
         now = datetime.now(timezone.utc)
              
-        if user.otp_expires_at and user.otp_expires_at.replace(tzinfo=timezone.utc) < now:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="OTP expired"
-            )
+        # if user.otp_expires_at and user.otp_expires_at.replace(tzinfo=timezone.utc) < now:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="OTP expired"
+        #     )
             
         # Update password
         user.hashed_password = auth_service.hash_password(request.new_password)
         
         # Clear OTP fields
-        user.otp_code = None
-        user.otp_expires_at = None
+        # user.otp_code = None
+        # user.otp_expires_at = None
         await user.save()
             
         return {"message": "Password reset successfully"}
@@ -137,5 +141,7 @@ async def reset_password(request: ResetPasswordRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
 
 
