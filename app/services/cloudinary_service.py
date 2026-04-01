@@ -37,3 +37,26 @@ class CloudinaryService:
         except Exception as e:
             print(f"Cloudinary upload failed: {e}")
             return None
+
+    def upload_image(self, file_content: bytes, filename: str):
+        """
+        Uploads an image to Cloudinary and returns the secure URL with optimization.
+        """
+        try:
+            # Remove extension from filename
+            base_filename = os.path.splitext(os.path.basename(filename))[0]
+            
+            result = cloudinary.uploader.upload(
+                file_content,
+                folder="profile_pictures/",
+                public_id=base_filename,
+                overwrite=True,
+                transformation=[
+                    {"width": 400, "height": 400, "crop": "fill", "gravity": "face"},
+                    {"fetch_format": "auto", "quality": "auto"}
+                ]
+            )
+            return result.get("secure_url")
+        except Exception as e:
+            print(f"Cloudinary image upload failed: {e}")
+            return None
