@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from app.auth import auth_router
 from app.detect import video_router
 from app.routes import settings_router, dashboard_router
@@ -8,7 +8,7 @@ from app.models.user import User
 from app.schemas.schemas import AdminSeedRequest
 from app.services.auth_service import auth_service
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.auth.auth_router import get_current_user
 
 
 
@@ -58,6 +58,18 @@ async def create_admin(admin_data: AdminSeedRequest):
         "message": "Admin created successfully"
     }
 
+
+
+@app.get("/current-user") 
+async def get_current_user(current_user : User = Depends(get_current_user)):
+    try:
+        if current_user:
+            email, full_name =  current_user.email, current_user.full_name
+            
+        return {"email": email, "full_name": full_name}
+
+    except Exception as e:
+        raise HTTPException(404, detail=f"Unable to fetch current user data {e}")
 
 
 app.include_router(auth_router.router)

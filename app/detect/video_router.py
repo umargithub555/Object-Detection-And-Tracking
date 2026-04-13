@@ -42,7 +42,7 @@ async def process_video(file: UploadFile = File(...)):
 
     try:
         # 1. Process the video and get summary counts
-        result = await video_service.process_video(input_path, output_path)
+        result = await video_service.process_video(input_path, output_path, file.filename)
 
         # 2. Upload to Cloudinary
         print(f"Uploading to Cloudinary: {output_path}")
@@ -71,9 +71,54 @@ async def process_video(file: UploadFile = File(...)):
         # Cleanup input file
         if os.path.exists(input_path):
             os.remove(input_path)
-        # Optional: Cleanup output file as well if you only want to serve from Cloudinary
-        # if os.path.exists(output_path):
-        #     os.remove(output_path)
+
+@router.post("/process-employee-sittings")
+async def process_employee_sittings(file: UploadFile = File(...)):
+    """
+    Upload a video file, process it using YOLO Pose estimation and tracking
+    specifically for employee sitting/standing detection.
+    """
+    file_extension = os.path.splitext(file.filename)[1]
+    unique_filename = f"sitting_{uuid.uuid4()}{file_extension}"
+    input_path = os.path.join(UPLOAD_DIR, unique_filename)
+    output_filename = f"processed_{unique_filename}"
+    output_path = os.path.join(OUTPUT_DIR, output_filename)
+
+    # Save uploaded file
+    with open(input_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    try:
+        # 1. Process the video for sittings
+        result = await video_service.process_employee_sittings(input_path, output_path, file.filename)
+
+        # 2. Upload to Cloudinary
+        print(f"Uploading to Cloudinary: {output_path}")
+        cloudinary_url = cloudinary_service.upload_video(output_path)
+        print(f"Cloudinary Upload Complete: {cloudinary_url}")
+
+        # 3. Return results
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Employee sitting detection and upload complete",
+                "filename": file.filename,
+                "metadata": result["metadata"],
+                "counts": result["counts"],
+                "summary": result["summary"],
+                "cloudinary_url": cloudinary_url,
+                "download_url": f"/video/download/{output_filename}"
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"message": f"Processing failed: {str(e)}"}
+        )
+    finally:
+        # Cleanup input file
+        if os.path.exists(input_path):
+            os.remove(input_path)
 
 @router.get("/download/{filename}")
 async def download_video(filename: str):

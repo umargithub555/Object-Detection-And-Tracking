@@ -28,10 +28,11 @@ class CloudinaryService:
                 resource_type="video",
                 public_id=f"processed_videos/{base_filename}",
                 overwrite=True,
-                # Transformation to ensure browser compatibility (H.264, optimized)
-                transformation=[
+                # Use eager transformations for large videos to avoid synchronous processing limits
+                eager=[
                     {"fetch_format": "auto", "quality": "auto"}
-                ]
+                ],
+                eager_async=True
             )
             return result.get("secure_url")
         except Exception as e:
