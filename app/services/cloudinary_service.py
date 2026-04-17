@@ -34,7 +34,17 @@ class CloudinaryService:
                 ],
                 eager_async=True
             )
-            return result.get("secure_url")
+            # Return optimized URL with auto-format and auto-quality delivery
+            optimized_url, _ = cloudinary.utils.cloudinary_url(
+                result.get("public_id"),
+                resource_type="video",
+                fetch_format="auto",
+                quality="auto",
+                secure=True,
+                version=result.get("version"),
+                format="mp4"
+            )
+            return optimized_url
         except Exception as e:
             print(f"Cloudinary upload failed: {e}")
             return None
