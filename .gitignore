@@ -36,3 +36,8 @@ logs/
 
 Employee-Activity-Detection-7/
 employee_activity/
+roboflow_cache/
+document-segmentation-tzzh7/
+models-cache/
+shared-blobs/
+*.db
