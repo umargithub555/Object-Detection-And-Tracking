@@ -3,7 +3,7 @@ from functools import lru_cache
 from fastapi_mail import ConnectionConfig
 from pydantic import Field
 import enum
-
+import os
 
 class Settings(BaseSettings):
     # App settings
@@ -25,7 +25,9 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
 
-
+    mail_username: str = Field(..., alias="MAIL_USERNAME")
+    mail_password: str = Field(..., alias="MAIL_PASSWORD")
+    mail_from: str = Field(..., alias="MAIL_FROM")
     model_config = SettingsConfigDict(
         env_file='.env',
         env_file_encoding='utf-8',
@@ -47,18 +49,16 @@ def get_settings() -> Settings:
 
 
 
+
+settings = get_settings()
+
 conf = ConnectionConfig(
-    
-    MAIL_USERNAME="shayanumar277@gmail.com",
-    MAIL_PASSWORD="ctax tfwk yqrs bche",  # use App Password for Gmail
-    MAIL_FROM="shayanumar277@gmail.com",
+    MAIL_USERNAME=settings.mail_username,
+    MAIL_PASSWORD=settings.mail_password,
+    MAIL_FROM=settings.mail_from,
     MAIL_PORT=587,
     MAIL_SERVER="smtp.gmail.com",
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True
 )
-
-
-
-settings = get_settings()
