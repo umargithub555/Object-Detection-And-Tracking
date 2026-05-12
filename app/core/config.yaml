@@ -1,0 +1,58 @@
+# ── Project V1.1: Advanced Multi-Object Tracking ─────────────────────────────
+
+project:
+  name: "V1.1_StrongSORT_YOLOv8"
+  version: "1.0"
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+paths:
+  data_root: "data/MOT17"
+  output_root: "outputs"
+  videos_dir: "outputs/videos"
+  reports_dir: "outputs/reports"
+  eval_dir: "outputs/eval"
+  weights_dir: "weights"
+
+# ── Detector ──────────────────────────────────────────────────────────────────
+detector:
+  model: "yolov8m.pt"
+  device: "0"             # 0 = first GPU | cpu
+  conf_threshold: 0.3
+  iou_threshold: 0.45
+  target_classes: [0,2,3,5,7,67]    # 0 = person
+  input_resolution: 640  # reduce to 480 if thermal throttling
+
+# ── Tracker: StrongSORT ───────────────────────────────────────────────────────
+strongsort:
+  device: "0"             # 0 = first GPU | cpu
+  osnet_model: "osnet_x0_25_msmt17.pt"
+  max_age: 30
+  min_hits: 3
+  iou_threshold: 0.3
+  ema_alpha: 0.9
+  mc_lambda: 0.98        # camera motion compensation weight
+  ema_alpha_embedding: 0.9
+
+# ── Tracker: ByteTrack (baseline) ─────────────────────────────────────────────
+bytetrack:
+  device: "0"             # 0 = first GPU | cpu
+  track_thresh: 0.5
+  track_buffer: 30
+  match_thresh: 0.8
+
+# ── Visualization ─────────────────────────────────────────────────────────────
+visualization:
+  box_thickness: 2
+  font_scale: 0.6
+  velocity_min_magnitude: 2.0   # pixels, below this velocity arrows are suppressed
+  velocity_arrow_scale: 3.0
+  show_state_label: true        # overlay born/active/lost on box
+
+# ── Video Writer ──────────────────────────────────────────────────────────────
+video:
+  codec: "mp4v"
+  fps: 25                # overridden per sequence if GT fps is known
+
+# ── DataLoader ────────────────────────────────────────────────────────────────
+dataloader:
+  num_workers: 4         # Increased for Windows/NVIDIA setup
