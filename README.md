@@ -102,4 +102,4 @@ python app/services/video_service_v2.py
 ---
 
 ## 📜 License
-This project is for internal and educational use. See individual model licenses (Ultralytics, BoxMOT) for commercial usage details.
+This project is for internal company use.
