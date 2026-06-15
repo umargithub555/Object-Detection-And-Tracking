@@ -1,7 +1,8 @@
 import shutil
 import uuid
-from fastapi import APIRouter, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, BackgroundTasks, Form
 from fastapi.responses import FileResponse, JSONResponse
+import json
 from app.services.video_service import VideoProcessingService
 from app.services.cloudinary_service import CloudinaryService
 import os
@@ -134,3 +135,66 @@ async def download_video(filename: str):
         filename=filename,
         media_type="video/mp4"
     )
+
+@router.post("/process-desk-monitoring")
+async def process_desk_monitoring(
+    file: UploadFile = File(...),
+    regions_file: UploadFile = File(None)
+):
+    """
+    Upload a video file and optional regions JSON, process it for desk occupancy,
+    upload to Cloudinary, and return the occupancy statistics.
+    """
+    file_extension = os.path.splitext(file.filename)[1]
+    unique_filename = f"desk_{uuid.uuid4()}{file_extension}"
+    input_path = os.path.join(UPLOAD_DIR, unique_filename)
+    output_filename = f"processed_{unique_filename}"
+    output_path = os.path.join(OUTPUT_DIR, output_filename)
+
+    # Save uploaded video file
+    with open(input_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    regions_data = None
+    if regions_file:
+        try:
+            regions_content = await regions_file.read()
+            regions_data = json.loads(regions_content)
+        except Exception as e:
+            return JSONResponse(status_code=400, content={"message": f"Invalid regions JSON: {str(e)}"})
+
+    try:
+        # 1. Process the video for desk monitoring
+        result = await video_service.process_desk_monitoring(input_path, output_path, file.filename, regions_data)
+
+        if "error" in result:
+            return JSONResponse(status_code=500, content=result)
+
+        # 2. Upload to Cloudinary
+        print(f"Uploading to Cloudinary: {output_path}")
+        cloudinary_url = cloudinary_service.upload_video(output_path)
+        print(f"Cloudinary Upload Complete: {cloudinary_url}")
+
+        # 3. Return results
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Desk monitoring and upload complete",
+                "filename": file.filename,
+                "metadata": result["metadata"],
+                "desk_stats": result["desk_stats"],
+                "overall_total_time": result["overall_total_time"],
+                "cloudinary_url": cloudinary_url,
+                "download_url": f"/video/download/{output_filename}"
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"message": f"Processing failed: {str(e)}"}
+        )
+    finally:
+        # Cleanup input file
+        if os.path.exists(input_path):
+            os.remove(input_path)
+
